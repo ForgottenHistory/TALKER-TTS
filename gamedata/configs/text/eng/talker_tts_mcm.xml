@@ -1,0 +1,27 @@
+<!-- gamedata/configs/text/eng/talker_tts_mcm.xml -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+    <string id="ui_mcm_menu_talker_tts">
+        <text>TALKER - TTS</text>
+    </string>
+    
+    <string id="ui_mcm_talker_tts_title">
+        <text>Text-to-Speech Settings</text>
+    </string>
+    
+    <string id="ui_mcm_talker_tts_tts_enabled">
+        <text>Enable Text-to-Speech</text>
+    </string>
+    
+    <string id="ui_mcm_talker_tts_tts_enabled_desc">
+        <text>Enable voice synthesis for NPC dialogue using ElevenLabs</text>
+    </string>
+    
+    <string id="ui_mcm_talker_tts_tts_volume">
+        <text>TTS Volume</text>
+    </string>
+    
+    <string id="ui_mcm_talker_tts_tts_volume_desc">
+        <text>Adjust the volume of synthesized voices (0-100)</text>
+    </string>
+</string_table>

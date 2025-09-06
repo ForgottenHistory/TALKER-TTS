@@ -1,0 +1,30 @@
+-- gamedata/scripts/talker_tts_player.script
+
+package.path = package.path .. ";./bin/lua/?.lua;"
+local logger = require('framework.logger')
+
+-- Simple functions since we're not using game audio
+function play_tts_2d(audio_file)
+    logger.info("TTS audio handled by Windows - file: %s", audio_file)
+    return true  -- Always return success since Windows handles it
+end
+
+function play_tts_3d(speaker_id, audio_file)
+    logger.info("TTS audio handled by Windows for speaker %s - file: %s", speaker_id, audio_file)
+    return true
+end
+
+function stop_tts(speaker_id)
+    -- Can't easily stop Windows audio, but that's probably fine
+    logger.info("TTS stop requested for speaker %s (Windows audio)", speaker_id)
+end
+
+function on_game_start()
+    RegisterScriptCallback("on_game_load", function()
+        printf("!!! TALKER TTS Player loaded (Windows Audio Mode) !!!")
+    end)
+end
+
+function is_loaded()
+    return true
+end

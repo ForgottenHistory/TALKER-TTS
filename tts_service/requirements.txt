@@ -1,0 +1,9 @@
+# Kokoro TTS Requirements
+flask
+requests
+pygame
+pyyaml
+torch
+torchaudio
+soundfile
+numpy

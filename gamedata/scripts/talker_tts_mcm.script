@@ -1,0 +1,58 @@
+-- gamedata/scripts/talker_tts_mcm.script
+
+function on_mcm_load()
+    local options = {
+        id = "talker_tts",
+        sh = true,
+        gr = {
+            { id = "title", type = "slide", link = "ui_options_slider_player", text = "ui_mcm_talker_tts_title", size = { 512, 50 }, spacing = 20 },
+            
+            {
+                id = "tts_enabled",
+                type = "check",
+                val = 1,
+                def = true,
+            },
+            
+            {
+                id = "tts_volume", 
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 100,
+                step = 1,
+                def = 75,
+            }
+        }
+    }
+    return options
+end
+
+-- Default configuration values
+local defaults = {
+    ["tts_enabled"] = true,
+    ["tts_volume"] = 75
+}
+
+-- Function to retrieve configuration value
+function get(key)
+    if ui_mcm then
+        return ui_mcm.get("talker_tts/" .. key)
+    else
+        return defaults[key]
+    end
+end
+
+-- Helper functions for other scripts to check settings
+function is_tts_enabled()
+    return get("tts_enabled")
+end
+
+function get_tts_volume()
+    return get("tts_volume")
+end
+
+-- Convert MCM volume (0-100) to normalized volume (0.0-1.0)
+function get_normalized_volume()
+    return get_tts_volume() / 100.0
+end
