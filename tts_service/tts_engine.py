@@ -1,4 +1,4 @@
-# tts_engine.py - Reverted to working TTS engine approach
+# tts_engine.py - Fixed TTS engine with proper queue handling
 import time
 import torch
 import numpy as np
@@ -48,21 +48,7 @@ class TTSEngine:
             self.model = None
     
     def generate_audio(self, text: str, reference_voice: Optional[str] = None, target_volume: float = 1.0) -> Optional[Path]:
-        """Generate audio and return path to saved file (supports local and remote)"""
-        # Try remote TTS first if enabled
-        from remote_tts_client import create_remote_client
-        remote_client = create_remote_client()
-        
-        if remote_client:
-            print("[TTS ENGINE] Using remote TTS generation...")
-            remote_file = remote_client.generate_tts_file(text, reference_voice, target_volume)
-            if remote_file:
-                print(f"[TTS ENGINE] Remote TTS successful: {remote_file}")
-                return remote_file
-            else:
-                print("[TTS ENGINE] Remote TTS failed, falling back to local...")
-        
-        # Local TTS generation (original code)
+        """Generate audio and return path to saved file (LOCAL ONLY - no remote bypass)"""
         if not self.model:
             print("[TTS ENGINE] Local model not initialized")
             return None

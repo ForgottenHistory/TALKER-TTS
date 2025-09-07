@@ -1,4 +1,4 @@
-# chatterbox_generator.py - Refactored main generator using modular components
+# chatterbox_generator.py - Fixed generator with proper remote TTS queue handling
 import hashlib
 import json
 from pathlib import Path
@@ -45,8 +45,18 @@ class ChatterboxGenerator:
     
     def generate_tts(self, text: str, voice_config: Dict[str, Any], character_info: Dict[str, Any] = None, 
                     target_volume: float = 1.0) -> Optional[Path]:
-        """Generate TTS audio using modular components"""
+        """Generate TTS audio - try remote first, then local (all through queue)"""
+        
         # Try remote TTS first if enabled
+        remote_file = self._try_remote_tts(text, character_info, target_volume)
+        if remote_file:
+            return remote_file
+        
+        # Fall back to local generation
+        return self._generate_local_tts(text, voice_config, character_info, target_volume)
+    
+    def _try_remote_tts(self, text: str, character_info: Dict[str, Any] = None, target_volume: float = 1.0) -> Optional[Path]:
+        """Try remote TTS generation"""
         try:
             from remote_tts_client import create_remote_client
             remote_client = create_remote_client()
@@ -65,15 +75,20 @@ class ChatterboxGenerator:
                     return remote_file
                 else:
                     print("[CHATTERBOX] Remote TTS failed, falling back to local...")
+                    
         except Exception as e:
             print(f"[CHATTERBOX] Remote TTS error: {e}, falling back to local...")
         
-        # Original local TTS logic
+        return None
+    
+    def _generate_local_tts(self, text: str, voice_config: Dict[str, Any], character_info: Dict[str, Any] = None, 
+                           target_volume: float = 1.0) -> Optional[Path]:
+        """Generate TTS locally"""
         if not self.tts_engine.model:
             print("[CHATTERBOX] TTS engine not initialized")
             return None
 
-        print(f"[CHATTERBOX] Generating TTS: '{text[:50]}...'")
+        print(f"[CHATTERBOX] Generating TTS locally: '{text[:50]}...'")
         
         # Get voice file for character
         reference_voice = None
