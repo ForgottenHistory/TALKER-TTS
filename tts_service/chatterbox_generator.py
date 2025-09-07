@@ -44,12 +44,35 @@ class ChatterboxGenerator:
         return self.voice_manager.get_voice_file_for_character(character_info)
     
     def generate_tts(self, text: str, voice_config: Dict[str, Any], character_info: Dict[str, Any] = None, 
-                     target_volume: float = 1.0) -> Optional[Path]:
+                    target_volume: float = 1.0) -> Optional[Path]:
         """Generate TTS audio using modular components"""
+        # Try remote TTS first if enabled
+        try:
+            from remote_tts_client import create_remote_client
+            remote_client = create_remote_client()
+            
+            if remote_client:
+                print("[CHATTERBOX] Using remote TTS generation...")
+                
+                # Get voice file for character (for remote reference)
+                reference_voice = None
+                if character_info:
+                    reference_voice = self.voice_manager.get_voice_file_for_character(character_info)
+                
+                remote_file = remote_client.generate_tts_file(text, character_info, target_volume)
+                if remote_file:
+                    print(f"[CHATTERBOX] Remote TTS successful: {remote_file}")
+                    return remote_file
+                else:
+                    print("[CHATTERBOX] Remote TTS failed, falling back to local...")
+        except Exception as e:
+            print(f"[CHATTERBOX] Remote TTS error: {e}, falling back to local...")
+        
+        # Original local TTS logic
         if not self.tts_engine.model:
             print("[CHATTERBOX] TTS engine not initialized")
             return None
-        
+
         print(f"[CHATTERBOX] Generating TTS: '{text[:50]}...'")
         
         # Get voice file for character
@@ -74,7 +97,7 @@ class ChatterboxGenerator:
         # Move to final cache location
         audio_file.rename(output_wav)
         print(f"[CHATTERBOX] TTS complete: {output_wav.stat().st_size} bytes")
-        return output_wav
+        return output_wav    
     
     def _create_cache_key(self, text: str, target_volume: float = 1.0, reference_voice: str = None) -> str:
         """Create unique cache key with working parameters"""

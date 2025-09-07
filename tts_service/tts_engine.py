@@ -48,15 +48,29 @@ class TTSEngine:
             self.model = None
     
     def generate_audio(self, text: str, reference_voice: Optional[str] = None, target_volume: float = 1.0) -> Optional[Path]:
-        """Generate audio and return path to saved file (revert to working method)"""
+        """Generate audio and return path to saved file (supports local and remote)"""
+        # Try remote TTS first if enabled
+        from remote_tts_client import create_remote_client
+        remote_client = create_remote_client()
+        
+        if remote_client:
+            print("[TTS ENGINE] Using remote TTS generation...")
+            remote_file = remote_client.generate_tts_file(text, reference_voice, target_volume)
+            if remote_file:
+                print(f"[TTS ENGINE] Remote TTS successful: {remote_file}")
+                return remote_file
+            else:
+                print("[TTS ENGINE] Remote TTS failed, falling back to local...")
+        
+        # Local TTS generation (original code)
         if not self.model:
-            print("[TTS ENGINE] Model not initialized")
+            print("[TTS ENGINE] Local model not initialized")
             return None
-        
+
         start_time = time.time()
-        
+
         try:
-            print(f"[TTS ENGINE] Generating audio...")
+            print(f"[TTS ENGINE] Generating audio locally...")
             
             # Use working parameters
             if reference_voice and os.path.exists(reference_voice):
