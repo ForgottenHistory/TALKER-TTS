@@ -1,6 +1,6 @@
 {
   "enabled": true,
   "server_url": "http://127.0.0.1:5050",
-  "timeout": 30,
+  "timeout": 120,
   "fallback_to_local": true
 }

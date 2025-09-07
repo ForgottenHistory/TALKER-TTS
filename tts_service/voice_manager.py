@@ -9,8 +9,9 @@ class VoiceManager:
         self.voices_dir.mkdir(exist_ok=True)
         
         self.factions = [
-            'army', 'bandit', 'duty', 'freedom', 'stalker', 
-            'loner', 'monolith', 'ecologist', 'mercenary'
+            'loner', 'bandit', 'army', 'duty', 'freedom', 
+            'ecolog', 'monolith', 'mercenary', 'clear sky', 
+            'renegade', 'unisg', 'sin'
         ]
     
     def setup_voice_structure(self):

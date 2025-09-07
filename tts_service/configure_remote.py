@@ -58,6 +58,12 @@ def show_config_file():
     else:
         print("No config file found - will be created on first use")
 
+def set_timeout(timeout_seconds: int):
+    """Set remote TTS timeout"""
+    remote_config.config["timeout"] = timeout_seconds
+    remote_config._save_config()
+    print(f"✅ Remote TTS timeout set to {timeout_seconds} seconds")
+
 def main():
     if len(sys.argv) == 1:
         show_status()
@@ -82,6 +88,10 @@ def main():
     elif command == 'config':
         show_config_file()
     
+    elif command == 'timeout' and len(sys.argv) == 3:
+        timeout_val = int(sys.argv[2])
+        set_timeout(timeout_val)
+
     else:
         print("Usage:")
         print("  python configure_remote.py                    # Show current status")

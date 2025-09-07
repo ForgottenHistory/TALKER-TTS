@@ -13,23 +13,30 @@ class RemoteTTSClient:
         self.temp_dir.mkdir(exist_ok=True)
     
     def generate_tts_file(self, text: str, character_info: dict = None, 
-                     target_volume: float = 1.0) -> Optional[Path]:
+                    target_volume: float = 1.0) -> Optional[Path]:
         """Generate TTS on remote server and download WAV file"""
         try:
             print(f"[REMOTE TTS] Sending request to {self.server_url}...")
             
             payload = {
                 'text': text,
-                'character_info': character_info,  # Send character info instead of voice path
+                'character_info': character_info,
                 'target_volume': target_volume
             }
+            
+            # Calculate timeout based on text length (same logic as server)
+            estimated_duration = len(text) / 10.0  # chars per second estimate  
+            dynamic_timeout = max(60, estimated_duration + 30)  # minimum 60s
+            actual_timeout = max(self.timeout, dynamic_timeout)
+            
+            print(f"[REMOTE TTS] Text length: {len(text)} chars, using timeout: {actual_timeout:.1f}s")
             
             start_time = time.time()
             
             response = requests.post(
                 f"{self.server_url}/generate_tts",
                 json=payload,
-                timeout=self.timeout,
+                timeout=actual_timeout,  # Use dynamic timeout
                 stream=True
             )
             
@@ -62,7 +69,7 @@ class RemoteTTSClient:
         except Exception as e:
             print(f"[REMOTE TTS] ❌ Error: {e}")
             return None
-
+    
     def test_connection(self) -> bool:
         """Test connection to remote server"""
         try:

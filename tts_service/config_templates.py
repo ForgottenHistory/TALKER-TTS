@@ -86,7 +86,12 @@ class ConfigTemplateGenerator:
     
     def _get_faction_templates(self) -> Dict[str, Dict[str, Any]]:
         """Get minimal faction configuration templates"""
-        factions = ['army', 'bandit', 'duty', 'freedom', 'stalker', 'loner', 'monolith', 'ecologist', 'mercenary']
+        # Complete STALKER faction list
+        factions = [
+            'loner', 'bandit', 'army', 'duty', 'freedom', 
+            'ecolog', 'monolith', 'mercenary', 'clear sky', 
+            'renegade', 'unisg', 'sin'
+        ]
         
         templates = {}
         for faction in factions:

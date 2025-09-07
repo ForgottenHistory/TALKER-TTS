@@ -138,7 +138,7 @@ class ChatterboxGenerator:
         factions_dir.mkdir(exist_ok=True)
         
         # Standard STALKER factions
-        factions = ['army', 'bandit', 'duty', 'freedom', 'stalker', 'loner', 'monolith', 'ecologist', 'mercenary']
+        factions = ['loner', 'bandit', 'army', 'duty', 'freedom', 'ecolog', 'monolith', 'mercenary', 'clear sky', 'renegade', 'unisg', 'sin']
         
         for faction in factions:
             faction_dir = factions_dir / faction
