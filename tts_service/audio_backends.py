@@ -4,6 +4,36 @@ import time
 from pathlib import Path
 from typing import Optional
 
+def get_audio_duration(audio_file: Path) -> float:
+    """Get actual audio duration from file"""
+    try:
+        # Try soundfile first (most accurate)
+        import soundfile as sf
+        info = sf.info(audio_file)
+        duration = info.duration
+        print(f"[DURATION] Detected duration: {duration:.2f}s via soundfile")
+        return duration
+    except:
+        try:
+            # Fallback: FFprobe
+            result = subprocess.run([
+                'ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
+                '-of', 'csv=p=0', str(audio_file)
+            ], capture_output=True, text=True, timeout=5)
+            
+            if result.returncode == 0:
+                duration = float(result.stdout.strip())
+                print(f"[DURATION] Detected duration: {duration:.2f}s via ffprobe")
+                return duration
+        except:
+            pass
+    
+    # Last resort: file size estimate (very rough)
+    file_size = audio_file.stat().st_size
+    estimated_duration = max(3, min(60, file_size / 50000))
+    print(f"[DURATION] Estimated duration: {estimated_duration:.2f}s (file size estimate)")
+    return estimated_duration
+
 class AudioBackend:
     """Base class for audio backends"""
     
@@ -44,6 +74,10 @@ class PygameBackend(AudioBackend):
             return False
             
         try:
+            # Get actual audio duration
+            duration = get_audio_duration(audio_file)
+            timeout_duration = duration + 5.0  # Add 5 second buffer for pygame
+            
             # Initialize mixer if not already done
             if not self.pygame.mixer.get_init():
                 self.pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
@@ -52,17 +86,17 @@ class PygameBackend(AudioBackend):
             self.pygame.mixer.music.load(str(audio_file))
             self.pygame.mixer.music.set_volume(min(1.0, max(0.0, volume)))
             
-            print(f"[PYGAME] Starting pygame playback...")
+            print(f"[PYGAME] Starting pygame playback for {duration:.1f}s...")
             self.pygame.mixer.music.play()
             
-            # Wait for playback to complete
+            # Wait for playback to complete with proper timeout
             start_time = time.time()
             while self.pygame.mixer.music.get_busy():
                 time.sleep(0.1)
                 
-                # Safety timeout (max 30 seconds)
-                if time.time() - start_time > 30:
-                    print("[PYGAME] Pygame playback timeout, stopping")
+                # Use calculated timeout instead of hardcoded 30s
+                if time.time() - start_time > timeout_duration:
+                    print(f"[PYGAME] Pygame playback timeout after {timeout_duration:.1f}s, stopping")
                     self.pygame.mixer.music.stop()
                     break
             
@@ -92,18 +126,18 @@ class WindowsMediaPlayerBackend(AudioBackend):
     def play(self, audio_file: Path, volume: float) -> bool:
         """Play audio using Windows Media Player"""
         try:
-            # Windows Media Player command line
+            # Get actual audio duration  
+            duration = get_audio_duration(audio_file)
+            wait_time = duration + 1.0  # Add 1 second buffer
+            
             process = subprocess.Popen([
                 'cmd', '/c', 'start', '/min', 'wmplayer', '/close', str(audio_file)
             ], creationflags=subprocess.CREATE_NO_WINDOW)
             
-            # Wait for a reasonable time (estimate audio duration)
-            file_size = audio_file.stat().st_size
-            estimated_duration = max(2, min(15, file_size / 50000))  # Rough estimate
+            print(f"[WMPLAYER] Playing for {wait_time:.1f}s (duration: {duration:.1f}s)")
+            time.sleep(wait_time)
             
-            time.sleep(estimated_duration)
-            
-            print("[WMPLAYER] Windows Media Player playback completed (estimated)")
+            print("[WMPLAYER] Windows Media Player playback completed")
             return True
             
         except Exception as e:
@@ -121,6 +155,10 @@ class PowerShellBackend(AudioBackend):
     def play(self, audio_file: Path, volume: float) -> bool:
         """Play audio using PowerShell MediaPlayer"""
         try:
+            # Get actual audio duration
+            duration = get_audio_duration(audio_file)
+            wait_time = duration + 2.0  # Add 2 second buffer
+            
             abs_path = audio_file.resolve()
             
             powershell_script = f'''
@@ -132,7 +170,7 @@ class PowerShellBackend(AudioBackend):
                 $player.Play()
                 
                 Write-Host "Audio player started successfully"
-                Start-Sleep -Seconds 8  # Wait for audio playback
+                Start-Sleep -Seconds {wait_time}
                 
                 $player.Stop()
                 $player.Close()
@@ -142,6 +180,8 @@ class PowerShellBackend(AudioBackend):
                 exit 1
             }}
             '''
+            
+            print(f"[POWERSHELL] Playing for {wait_time:.1f}s (duration: {duration:.1f}s)")
             
             result = subprocess.run([
                 'powershell', '-WindowStyle', 'Hidden', '-Command', powershell_script
